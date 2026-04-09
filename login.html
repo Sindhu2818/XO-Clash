@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>XO — Login</title>
+    </head>
+    <body>
+        <main>
+            <nav>
+                <span>XOClash</span>
+                <div>
+                    <a href="lobby.html">Lobby</a>
+                    <a href="game.html">Game</a>
+                    <a href="leaderboard.html">Leaderboard</a>
+                    <a href="profile.html">Profile</a>
+                </div>
+                <div>
+                    <a href="settings.html">⚙️</a>
+                    <button id="logoutBtn">Logout</button>
+                </div>
+            </nav>
+
+            <h1>Arena Login</h1>
+            <video id="webcam" autoplay></video>
+            <br><br>
+            <button onclick="login()">Login with Face</button>
+            <p id="status">Status:Waiting....</p>
+            <canvas id="canvas" style="display: none;"></canvas>
+        </main>
+        <script src="main.js"></script>
+    </body>
+</html>

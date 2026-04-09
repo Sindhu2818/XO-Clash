@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>XO — Game</title>
+    </head>
+    <body>
+        <main>
+            <nav>
+                <span>XOClash</span>
+                <div>
+                    <a href="lobby.html">Lobby</a>
+                    <a href="game.html">Game</a>
+                    <a href="leaderboard.html">Leaderboard</a>
+                    <a href="profile.html">Profile</a>
+                </div>
+                <div>
+                    <a href="settings.html">⚙️</a>
+                    <button id="logoutBtn">Logout</button>
+                </div>
+            </nav>
+
+            <h1>🎮 Tic-Tac-Toe</h1>
+
+            <h3 id="players">Rahul (X) vs Priya (O)</h3>
+
+            <h3 id="turn">Turn: X</h3>
+
+            <!-- Game Board -->
+            <div id="board">
+                <button onclick="cellClick(0)"></button>
+                <button onclick="cellClick(1)"></button>
+                <button onclick="cellClick(2)"></button>
+
+                <br>
+
+                <button onclick="cellClick(3)"></button>
+                <button onclick="cellClick(4)"></button>
+                <button onclick="cellClick(5)"></button>
+
+                <br>
+
+                <button onclick="cellClick(6)"></button>
+                <button onclick="cellClick(7)"></button>
+                <button onclick="cellClick(8)"></button>
+            </div>
+
+            <h2 id="result"></h2>
+
+            <button onclick="goBack()">⬅ Back to Lobby</button>
+        </main>
+        <script src="main.js"></script>
+
+    </body>
+</html>
