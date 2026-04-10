@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>XOClash — Leaderboard</title>
+    </head>
+    <body>
+        <nav>
+            <span>XOClash</span>
+            <div>
+                <a href="lobby.html">Lobby</a>
+                <a href="game.html">Game</a>
+                <a href="leaderboard.html">Leaderboard</a>
+                <a href="profile.html">Profile</a>
+            </div>
+            <div>
+                <a href="settings.html">⚙️Settings</a>
+                <button id="logoutBtn">Logout</button>
+            </div>
+        </nav>
+        <main>
+            <h2>🏆 Leaderboard</h2>
+            <input type="text" id="searchInput" placeholder="Search player...(By Name)">
+            <select id="statusFilter">
+                <option value="all">All Players</option>
+                <option value="online">🟢 Online</option>
+                <option value="offline">🔴 Offline</option>
+            </select>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player Name</th>
+                        <th>Elo Score</th>
+                        <th>Wins</th>
+                        <th>Losses</th>
+                        <th>Win Rate</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody"></tbody>
+            </table>
+        </main>
+        <script src="leaderboard.js"></script>
+    </body>
+</html>

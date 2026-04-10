@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XOClash — Profile</title>
+</head>
+<body>
+    <nav>
+        <span>XOClash</span>
+        <div>
+            <a href="lobby.html">Lobby</a>
+            <a href="game.html">Game</a>
+            <a href="leaderboard.html">Leaderboard</a>
+            <a href="profile.html">Profile</a>
+        </div>
+        <div>
+            <a href="settings.html">⚙️Settings</a>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </nav>
+    <main>
+        <img id="profilePhoto" src="dummy_600x400_ffffff_cccccc.png" alt="Profile Photo">
+
+        <h2 id="playerName">Loading...</h2>
+        <p id="studentId">—</p>
+
+        <div>
+            <div>
+                <span id="eloScore">—</span>
+                <span>Elo Score</span>
+            </div>
+            <div>
+                <span id="playerRank">—</span>
+                <span>Rank</span>
+            </div>
+        </div>
+        <div>
+            <span>Wins: <span id="winCount">—</span></span><br>
+            <span>Draws: <span id="drawCount">—</span></span><br>
+            <span>Losses: <span id="lossCount">—</span></span><br>
+        </div>
+        <div>
+            <p>Games Played: <span id="gamesPlayed">—</span></p>
+            <p>Win Rate: <span id="winRate">—</span></p>
+            <p>Status: <span id="statusText">—</span></p>
+        </div>            
+    </main>
+    <scrpit src="profile.js"></scrpit>
+</body>
+</html>
