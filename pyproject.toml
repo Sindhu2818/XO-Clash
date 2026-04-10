@@ -1,7 +1,7 @@
 [project]
 name = "project"
 version = "0.1.0"
-description = "Add your description here"
+description = "CS6.201 Identity-Verified Multiplayer Arena"
 readme = "README.md"
 requires-python = "==3.11.*"
 dependencies = [
@@ -15,6 +15,10 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "requests>=2.33.1",
     "setuptools<71.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "itsdangerous>=2.2.0",
+    "python-multipart>=0.0.9",
 ]
 
 [tool.uv.sources]

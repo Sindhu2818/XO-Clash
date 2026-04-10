@@ -1,32 +1,64 @@
-//login page
-// start webcam
-const video = document.getElementById('webcam');
+// =============================================================================
+// SHARED CONFIG
+// =============================================================================
+const API_BASE = "http://127.0.0.1:8000";
+
+// =============================================================================
+// SHARED: Theme / font loader (runs on every page)
+// =============================================================================
+function loadSettings() {
+    const theme    = localStorage.getItem("theme")    || "dark";
+    const fontSize = localStorage.getItem("fontSize") || "medium";
+    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-font",  fontSize);
+}
+loadSettings();
+
+// =============================================================================
+// SHARED: Logout button — calls /logout on server to clear cookie + is_online
+// =============================================================================
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", async function () {
+        try {
+            await fetch(API_BASE + "/logout", {
+                method: "POST",
+                credentials: "include"   // send the session cookie
+            });
+        } catch (_) { /* ignore network errors */ }
+        localStorage.clear();
+        window.location.href = "login.html";
+    });
+}
+
+// =============================================================================
+// LOGIN PAGE
+// =============================================================================
+const video = document.getElementById("webcam");
 
 if (video) {
     navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-            video.srcObject = stream;
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => {
+            const status = document.getElementById("status");
+            if (status) status.innerText = "Camera access denied ❌";
+            console.error("Camera error:", err);
         });
 }
 
-// capture image
 function captureImage() {
-    if (!video) return null; // safety
-
-    const canvas = document.getElementById('canvas');
-    const context = canvas.getContext('2d');
-
-    canvas.width = video.videoWidth;
+    if (!video) return null;
+    const canvas  = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+    canvas.width  = video.videoWidth;
     canvas.height = video.videoHeight;
-
     context.drawImage(video, 0, 0);
-
-    return canvas.toDataURL('image/jpeg');
+    return canvas.toDataURL("image/jpeg");
 }
 
-// login button
 async function login() {
     const status = document.getElementById("status");
+    if (!status) return;
     status.innerText = "Scanning...";
 
     if (video.videoWidth === 0) {
@@ -34,14 +66,16 @@ async function login() {
         return;
     }
 
+<<<<<<< HEAD
     const image = captureImage();
 
+=======
+>>>>>>> df19400 (Updated files)
     try {
-        const response = await fetch("http://127.0.0.1:8000/login", {
+        const response = await fetch(API_BASE + "/login", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",          // receive the Set-Cookie header
             body: JSON.stringify({ image })
         });
 
@@ -63,47 +97,84 @@ async function login() {
 
         if (data.success) {
             status.innerText = "Login success ✅";
+<<<<<<< HEAD
 
             localStorage.setItem("uid", data.uid);
+=======
+            // Store minimal display info in localStorage (NOT used for auth)
+            localStorage.setItem("uid",  data.uid);
+>>>>>>> df19400 (Updated files)
             localStorage.setItem("name", data.name);
-
             window.location.href = "lobby.html";
         } else {
             status.innerText = "Face not recognized ❌";
         }
 
     } catch (err) {
+<<<<<<< HEAD
         status.innerText = "Request failed ❌";
+=======
+        status.innerText = "Server error ❌";
+>>>>>>> df19400 (Updated files)
         console.error(err);
     }
 }
-//lobby page
+
+// =============================================================================
+// SESSION GUARD — protect lobby, game, leaderboard, profile pages
+// Checks /me with the session cookie; redirects to login if not authenticated.
+// =============================================================================
+async function requireAuth() {
+    try {
+        const res = await fetch(API_BASE + "/me", { credentials: "include" });
+        if (!res.ok) throw new Error("Not authenticated");
+        const data = await res.json();
+        // Refresh localStorage display values from server truth
+        localStorage.setItem("uid",  data.uid);
+        localStorage.setItem("name", data.name);
+        return data;
+    } catch (_) {
+        localStorage.clear();
+        window.location.href = "login.html";
+        return null;
+    }
+}
+
+// =============================================================================
+// LOBBY PAGE
+// =============================================================================
+const playersTableBody = document.querySelector("#playersTable tbody");
+
+if (playersTableBody) {
+    (async () => {
+        await requireAuth();
+        loadPlayers();
+    })();
+}
 
 async function loadPlayers() {
-    const tableBody = document.querySelector("#playersTable tbody");
-    if(!tableBody) return;
+    if (!playersTableBody) return;
     try {
-        const response = await fetch("http://127.0.0.1:8000/users");
-        const players = await response.json();
+        const response = await fetch(API_BASE + "/api/users", { credentials: "include" });
+        const players  = await response.json();
+        const myUid    = localStorage.getItem("uid");
 
-        tableBody.innerHTML = "";
+        playersTableBody.innerHTML = "";
 
         players.forEach(player => {
             const row = document.createElement("tr");
-
             row.innerHTML = `
                 <td>${player.uid}</td>
                 <td>${player.name}</td>
-                <td>${player.elo}</td>
+                <td>${player.elo_rating}</td>
                 <td>${player.is_online ? "🟢 Online" : "🔴 Offline"}</td>
                 <td>
-                    ${player.is_online && player.uid !== localStorage.getItem("uid")
+                    ${player.is_online && player.uid !== myUid
                         ? `<button onclick="challenge('${player.uid}', '${player.name}')">Challenge</button>`
-                        : "-"}
+                        : "—"}
                 </td>
             `;
-
-            tableBody.appendChild(row);
+            playersTableBody.appendChild(row);
         });
 
     } catch (err) {
@@ -111,33 +182,23 @@ async function loadPlayers() {
     }
 }
 
-if (document.querySelector("#playersTable tbody")) {
-    loadPlayers();
+// Show "You vs Opponent" header on game page
+const playersHeader = document.getElementById("players");
+if (playersHeader) {
+    const me       = localStorage.getItem("name")     || "You";
+    const opponent = localStorage.getItem("opponent") || "Opponent";
+    playersHeader.innerText = `${me} vs ${opponent}`;
 }
 
-if (document.getElementById("players")) {
-    const me = localStorage.getItem("name");
-    const opponent = localStorage.getItem("opponent");
-
-    document.getElementById("players").innerText =
-        `${me} vs ${opponent}`;
-}
-
-
-
-// challenge popup
-
-function challenge(uid,name) {
-    localStorage.setItem("opponent", name);
-
+// Challenge — local redirect for now (Phase 3 will replace with WebSocket)
+function challenge(uid, name) {
+    localStorage.setItem("opponent",    name);
+    localStorage.setItem("opponentUid", uid);
     window.location.href = "game.html";
-    
 }
 
 function accept() {
     document.getElementById("popup").style.display = "none";
-
-    // simulate redirect to game
     window.location.href = "game.html";
 }
 
@@ -145,19 +206,22 @@ function decline() {
     document.getElementById("popup").style.display = "none";
 }
 
-//game page
+// =============================================================================
+// GAME PAGE  (client-side placeholder — Phase 3 replaces this with WebSockets)
+// =============================================================================
+if (document.getElementById("board")) {
+    requireAuth();  // guard the page
+}
 
-let board = ["", "", "", "", "", "", "", "", ""];
+let board         = ["", "", "", "", "", "", "", "", ""];
 let currentPlayer = "X";
-let gameOver = false;
+let gameOver      = false;
 
-// handle click
 function cellClick(index) {
     if (board[index] !== "" || gameOver) return;
 
     board[index] = currentPlayer;
 
-    // update UI
     const buttons = document.querySelectorAll("#board button");
     buttons[index].innerText = currentPlayer;
 
@@ -173,37 +237,21 @@ function cellClick(index) {
         return;
     }
 
-    // switch turn
     currentPlayer = currentPlayer === "X" ? "O" : "X";
     document.getElementById("turn").innerText = `Turn: ${currentPlayer}`;
 }
 
-// check winner
 function checkWinner() {
     const winPatterns = [
-        [0,1,2], [3,4,5], [6,7,8],
-        [0,3,6], [1,4,7], [2,5,8],
-        [0,4,8], [2,4,6]
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
     ];
-
-    return winPatterns.some(pattern => {
-        const [a, b, c] = pattern;
-        return board[a] &&
-               board[a] === board[b] &&
-               board[a] === board[c];
-    });
+    return winPatterns.some(([a, b, c]) =>
+        board[a] && board[a] === board[b] && board[a] === board[c]
+    );
 }
 
-// go back
 function goBack() {
     window.location.href = "lobby.html";
 }
-
-// ─── Apply saved theme & font (same as profile/leaderboard pages) ──────────
-function loadSettings() {
-    const theme    = localStorage.getItem("theme")    || "dark";
-    const fontSize = localStorage.getItem("fontSize") || "medium";
-    document.documentElement.setAttribute("data-theme", theme);
-    document.documentElement.setAttribute("data-font",  fontSize);
-}
-loadSettings();
