@@ -29,11 +29,13 @@ async function login() {
     const status = document.getElementById("status");
     status.innerText = "Scanning...";
 
-    const image = captureImage();
-    if (!image) {
+    if (video.videoWidth === 0) {
         status.innerText = "Camera not ready ❌";
         return;
     }
+
+    const image = captureImage();
+
     try {
         const response = await fetch("http://127.0.0.1:8000/login", {
             method: "POST",
@@ -43,12 +45,25 @@ async function login() {
             body: JSON.stringify({ image })
         });
 
-        const data = await response.json();
+        // 🔥 IMPORTANT FIX
+        const text = await response.text();
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            status.innerText = "Invalid server response ❌";
+            return;
+        }
+
+        if (!response.ok) {
+            status.innerText = "Server error ❌";
+            return;
+        }
 
         if (data.success) {
             status.innerText = "Login success ✅";
 
-            // store user info (IMPORTANT)
             localStorage.setItem("uid", data.uid);
             localStorage.setItem("name", data.name);
 
@@ -58,8 +73,7 @@ async function login() {
         }
 
     } catch (err) {
-        status.innerText = "Server error ❌";
-        alert("Backend not running?");
+        status.innerText = "Request failed ❌";
         console.error(err);
     }
 }

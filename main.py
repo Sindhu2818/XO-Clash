@@ -10,7 +10,7 @@ from utils.facial_recognition_module import find_closest_match
 app = FastAPI()
 
 # =========================
-# CORS (IMPORTANT)
+# CORS
 # =========================
 app.add_middleware(
     CORSMiddleware,
@@ -28,16 +28,15 @@ app.add_middleware(
 mysql_conn = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="NxPkkn3Er34RNg1q",
+    password="Kani@1234",
     database="arena_db"
 )
 cursor = mysql_conn.cursor(dictionary=True)
 
-# MongoDB
+# MongoDB (SAME AS SCRAPER)
 mongo_client = MongoClient("mongodb://localhost:27017/")
 mongo_db = mongo_client["arena_db"]
 images_collection = mongo_db["profile_images"]
-
 
 # =========================
 # REQUEST MODEL
@@ -46,29 +45,27 @@ images_collection = mongo_db["profile_images"]
 class LoginRequest(BaseModel):
     image: str
 
-
 # =========================
-# HELPER FUNCTIONS
+# HELPERS
 # =========================
 
 def get_all_images():
     data = {}
     for doc in images_collection.find():
         data[doc["uid"]] = doc["image"]
+    print(f"[Mongo] Loaded {len(data)} images")
     return data
-
 
 def get_user(uid):
     cursor.execute("SELECT * FROM users WHERE uid = %s", (uid,))
     return cursor.fetchone()
 
-
 def set_online(uid):
     cursor.execute(
-        "UPDATE users SET is_online = TRUE WHERE uid = %s", (uid,)
+        "UPDATE users SET is_online = TRUE WHERE uid = %s",
+        (uid,)
     )
     mysql_conn.commit()
-
 
 # =========================
 # ROUTES
@@ -78,31 +75,26 @@ def set_online(uid):
 def home():
     return {"msg": "Server running"}
 
-
-# 🔐 LOGIN (PHASE 2 COMPLETE)
 @app.post("/login")
 def login(req: LoginRequest):
-
     try:
-        # 1. Remove "data:image/...;base64," prefix
         image_data = req.image.split(",")[1]
 
-        # 2. Fetch all images from MongoDB
         db_images_dict = get_all_images()
 
-        # 3. Call facial recognition module
+        if not db_images_dict:
+            print("[ERROR] No images in MongoDB!")
+            return {"success": False}
+
         uid = find_closest_match(image_data, db_images_dict)
 
-        # 4. Reject if no match
         if uid is None:
             return {"success": False}
 
-        # 5. Verify user in MySQL
         user = get_user(uid)
         if not user:
             return {"success": False}
 
-        # 6. Mark user online
         set_online(uid)
 
         return {
@@ -116,7 +108,6 @@ def login(req: LoginRequest):
         return {"success": False}
 
 
-# 🟢 GET USERS (LOBBY)
 @app.get("/users")
 def get_users():
     cursor.execute("SELECT * FROM users")
