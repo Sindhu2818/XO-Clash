@@ -11,6 +11,8 @@ if (video) {
 
 // capture image
 function captureImage() {
+    if (!video) return null; // safety
+
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
 
@@ -24,83 +26,98 @@ function captureImage() {
 
 // login button
 async function login() {
-    const status = document.getElementById('status');
+    const status = document.getElementById("status");
     status.innerText = "Scanning...";
 
     const image = captureImage();
+    if (!image) {
+        status.innerText = "Camera not ready ❌";
+        return;
+    }
+    try {
+        const response = await fetch("http://127.0.0.1:8000/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ image })
+        });
 
-    const response = await fetch("http://localhost:8000/login", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ image })
-    });
+        const data = await response.json();
 
-    const data = await response.json();
+        if (data.success) {
+            status.innerText = "Login success ✅";
 
-    if (data.success) {
-        status.innerText = "Login success ✅";
-        window.location.href = "lobby.html";
-    } else {
-        status.innerText = "Face not recognized ❌";
+            // store user info (IMPORTANT)
+            localStorage.setItem("uid", data.uid);
+            localStorage.setItem("name", data.name);
+
+            window.location.href = "lobby.html";
+        } else {
+            status.innerText = "Face not recognized ❌";
+        }
+
+    } catch (err) {
+        status.innerText = "Server error ❌";
+        alert("Backend not running?");
+        console.error(err);
     }
 }
 //lobby page
 
-// fake players
-const players = [
-    { name: "Rahul", elo: 1200 },
-    { name: "Priya", elo: 1300 },
-    { name: "Arjun", elo: 1250 },
-    { name: "Sneha", elo: 1100 }
-];
+async function loadPlayers() {
+    const tableBody = document.querySelector("#playersTable tbody");
+    if(!tableBody) return;
+    try {
+        const response = await fetch("http://127.0.0.1:8000/users");
+        const players = await response.json();
 
-// render players
-const playersDiv = document.getElementById("players");
+        tableBody.innerHTML = "";
 
-if (playersDiv) {
-const players = [
-    { uid: "cs001", name: "Rahul", elo: 1200, online: true },
-    { uid: "cs002", name: "Priya", elo: 1300, online: true },
-    { uid: "cs003", name: "Arjun", elo: 1250, online: false },
-    { uid: "cs004", name: "Sneha", elo: 1100, online: true }
-];
+        players.forEach(player => {
+            const row = document.createElement("tr");
 
-const tableBody = document.querySelector("#playersTable tbody");
+            row.innerHTML = `
+                <td>${player.uid}</td>
+                <td>${player.name}</td>
+                <td>${player.elo}</td>
+                <td>${player.is_online ? "🟢 Online" : "🔴 Offline"}</td>
+                <td>
+                    ${player.is_online && player.uid !== localStorage.getItem("uid")
+                        ? `<button onclick="challenge('${player.uid}', '${player.name}')">Challenge</button>`
+                        : "-"}
+                </td>
+            `;
 
-if (tableBody) {
-    players.forEach(player => {
-        const row = document.createElement("tr");
+            tableBody.appendChild(row);
+        });
 
-        row.innerHTML = `
-            <td>${player.uid}</td>
-            <td>${player.name}</td>
-            <td>${player.elo}</td>
-            <td>${player.online ? "🟢 Online" : "🔴 Offline"}</td>
-            <td>
-                ${player.online 
-                    ? `<button onclick="challenge('${player.name}')">Challenge</button>` 
-                    : `-`}
-            </td>
-        `;
-
-        tableBody.appendChild(row);
-    });
+    } catch (err) {
+        console.error("Error loading players:", err);
+    }
 }
+
+if (document.querySelector("#playersTable tbody")) {
+    loadPlayers();
 }
+
+if (document.getElementById("players")) {
+    const me = localStorage.getItem("name");
+    const opponent = localStorage.getItem("opponent");
+
+    document.getElementById("players").innerText =
+        `${me} vs ${opponent}`;
+}
+
+
 
 // challenge popup
-let selectedOpponent = null;
 
-function challenge(name) {
-    selectedOpponent = name;
+function challenge(uid,name) {
+    localStorage.setItem("opponent", name);
 
-    const popup = document.getElementById("popup");
-    const text = document.getElementById("popupText");
-
-    text.innerText = `Send challenge to ${name}?`;
-    popup.style.display = "block";
+    window.location.href = "game.html";
+    
 }
 
 function accept() {
