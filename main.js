@@ -61,16 +61,12 @@ async function login() {
     if (!status) return;
     status.innerText = "Scanning...";
 
-    if (video.videoWidth === 0) {
+    const image = captureImage();
+    if (!image) {
         status.innerText = "Camera not ready ❌";
         return;
     }
 
-<<<<<<< HEAD
-    const image = captureImage();
-
-=======
->>>>>>> df19400 (Updated files)
     try {
         const response = await fetch(API_BASE + "/login", {
             method: "POST",
@@ -79,31 +75,12 @@ async function login() {
             body: JSON.stringify({ image })
         });
 
-        // 🔥 IMPORTANT FIX
-        const text = await response.text();
-
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch {
-            status.innerText = "Invalid server response ❌";
-            return;
-        }
-
-        if (!response.ok) {
-            status.innerText = "Server error ❌";
-            return;
-        }
+        const data = await response.json();
 
         if (data.success) {
             status.innerText = "Login success ✅";
-<<<<<<< HEAD
-
-            localStorage.setItem("uid", data.uid);
-=======
             // Store minimal display info in localStorage (NOT used for auth)
             localStorage.setItem("uid",  data.uid);
->>>>>>> df19400 (Updated files)
             localStorage.setItem("name", data.name);
             window.location.href = "lobby.html";
         } else {
@@ -111,11 +88,7 @@ async function login() {
         }
 
     } catch (err) {
-<<<<<<< HEAD
-        status.innerText = "Request failed ❌";
-=======
         status.innerText = "Server error ❌";
->>>>>>> df19400 (Updated files)
         console.error(err);
     }
 }
