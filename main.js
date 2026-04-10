@@ -184,3 +184,12 @@ function checkWinner() {
 function goBack() {
     window.location.href = "lobby.html";
 }
+
+// ─── Apply saved theme & font (same as profile/leaderboard pages) ──────────
+function loadSettings() {
+    const theme    = localStorage.getItem("theme")    || "dark";
+    const fontSize = localStorage.getItem("fontSize") || "medium";
+    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-font",  fontSize);
+}
+loadSettings();
