@@ -56,6 +56,7 @@ function renderTable(data) {
  
         const row = "<tr>" +
             "<td>" + player.rank + "</td>" +
+            "<td>" + player.uid + "</td>" +
             "<td><a href='profile.html?uid=" + encodeURIComponent(player.uid) + "'>" + player.name + "</a></td>" +
             "<td>" + player.elo + "</td>" +
             "<td>" + statusIcon + "</td>" +
@@ -71,7 +72,8 @@ function applyFilters() {
     const statusValue = statusFilter.value; // "all" | "online" | "offline"
  
     const filtered = allPlayers.filter(function(player) {
-        const matchesSearch = player.name.toLowerCase().includes(searchText);
+        const matchesSearch = player.name.toLowerCase().includes(searchText) ||
+                              String(player.uid).toLowerCase().includes(searchText);
         const matchesStatus = statusValue === "all" || player.status === statusValue;
         return matchesSearch && matchesStatus;
     });
