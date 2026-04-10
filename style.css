@@ -1,0 +1,604 @@
+/* ═══════════════════════════════════════════════════════════
+   XOClash — Global Stylesheet
+   Style: Playful Cartoon Game UI (wooden signs, sunny meadow)
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+/* ─── CSS Variables ──────────────────────────────────────── */
+:root {
+  /* Palette — sunny meadow */
+  --sky:        #c9eef5;
+  --grass:      #7ec850;
+  --grass-dark: #5aab30;
+  --sun:        #ffd94a;
+  --wood:       #8b5e3c;
+  --wood-light: #c48a50;
+  --wood-dark:  #5c3a1e;
+  --cream:      #fff8e7;
+  --red-accent: #e84040;
+  --orange:     #ff8c42;
+  --teal:       #3ec6c6;
+  --white:      #ffffff;
+  --shadow:     rgba(0,0,0,0.18);
+
+  /* Typography */
+  --font-display: 'Fredoka One', cursive;
+  --font-body:    'Nunito', sans-serif;
+
+  /* Font sizes */
+  --text-sm:   0.85rem;
+  --text-base: 1rem;
+  --text-lg:   1.15rem;
+  --text-xl:   1.4rem;
+  --text-2xl:  1.8rem;
+  --text-3xl:  2.4rem;
+
+  /* Spacing */
+  --radius-sm:  10px;
+  --radius-md:  18px;
+  --radius-lg:  28px;
+  --radius-xl:  40px;
+}
+
+/* ─── Font Size Overrides ────────────────────────────────── */
+[data-font="small"]  { font-size: 13px; }
+[data-font="medium"] { font-size: 16px; }
+[data-font="large"]  { font-size: 20px; }
+
+/* ─── Theme: Dark (default) ─────────────────────────────── */
+[data-theme="dark"] {
+  --bg:          #1a2e1a;
+  --bg2:         #243324;
+  --surface:     #2d472d;
+  --surface2:    #3a5a3a;
+  --text:        #f0f8e8;
+  --text-muted:  #a8c898;
+  --border:      #4a7040;
+}
+
+/* ─── Theme: Light ──────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:          #e8f5d8;
+  --bg2:         #d4ecc0;
+  --surface:     #fffdf0;
+  --surface2:    #f0f8e0;
+  --text:        #2a3d1a;
+  --text-muted:  #5a7a40;
+  --border:      #a8cc80;
+}
+
+/* ─── Reset & Base ──────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 80% 0%, rgba(255,217,74,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 0% 100%, rgba(94,171,48,0.2) 0%, transparent 50%);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Decorative grass strip at bottom */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 10px;
+  background: linear-gradient(90deg, var(--grass), var(--grass-dark), var(--grass));
+  border-radius: 50% 50% 0 0 / 6px 6px 0 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ─── Navigation ─────────────────────────────────────────── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--wood) 0%, var(--wood-light) 60%, var(--wood) 100%);
+  border-bottom: 4px solid var(--wood-dark);
+  box-shadow: 0 4px 16px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.15);
+  position: sticky; top: 0; z-index: 100;
+  /* Wood grain lines */
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      transparent, transparent 8px,
+      rgba(0,0,0,0.04) 8px, rgba(0,0,0,0.04) 9px
+    ),
+    linear-gradient(135deg, var(--wood) 0%, var(--wood-light) 60%, var(--wood) 100%);
+}
+
+nav > span {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--cream);
+  text-shadow: 3px 3px 0 var(--wood-dark), 0 0 20px rgba(255,217,74,0.4);
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+nav div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+nav a {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--cream);
+  text-decoration: none;
+  padding: 7px 16px;
+  background: rgba(0,0,0,0.25);
+  border-radius: var(--radius-lg);
+  border: 2px solid rgba(255,255,255,0.2);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+
+nav a:hover {
+  background: var(--sun);
+  color: var(--wood-dark);
+  border-color: var(--wood-dark);
+  transform: translateY(-2px) rotate(-1deg);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* ─── Main ──────────────────────────────────────────────── */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Headings ──────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: var(--text-3xl);
+  color: var(--sun);
+  text-shadow: 3px 3px 0 var(--wood-dark);
+  margin-bottom: 24px;
+  animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+h2 {
+  font-size: var(--text-2xl);
+  color: var(--grass);
+  text-shadow: 2px 2px 0 var(--wood-dark);
+  margin-bottom: 16px;
+}
+
+h3 {
+  font-size: var(--text-xl);
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+h4 {
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+/* ─── Buttons ───────────────────────────────────────────── */
+button {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  cursor: pointer;
+  padding: 10px 22px;
+  border-radius: var(--radius-lg);
+  border: 3px solid var(--wood-dark);
+  background: linear-gradient(160deg, var(--wood-light) 0%, var(--wood) 100%);
+  color: var(--cream);
+  text-shadow: 1px 1px 0 var(--wood-dark);
+  box-shadow: 0 5px 0 var(--wood-dark), 0 6px 12px rgba(0,0,0,0.2);
+  transition: transform 0.12s, box-shadow 0.12s;
+  letter-spacing: 0.5px;
+  /* Wood grain */
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      transparent, transparent 5px,
+      rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 6px
+    ),
+    linear-gradient(160deg, var(--wood-light) 0%, var(--wood) 100%);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 var(--wood-dark), 0 8px 16px rgba(0,0,0,0.25);
+}
+
+button:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--wood-dark), 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Primary / CTA button */
+button.primary,
+button[onclick="login()"],
+button[onclick="goBack()"] {
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      transparent, transparent 5px,
+      rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 6px
+    ),
+    linear-gradient(160deg, #5ed456 0%, var(--grass-dark) 100%);
+  border-color: #2d6e20;
+  box-shadow: 0 5px 0 #2d6e20, 0 6px 12px rgba(0,0,0,0.2);
+}
+
+button.primary:hover,
+button[onclick="login()"]:hover,
+button[onclick="goBack()"]:hover {
+  box-shadow: 0 7px 0 #2d6e20, 0 8px 16px rgba(0,0,0,0.25);
+}
+
+/* Danger button */
+button#logoutBtn {
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      transparent, transparent 5px,
+      rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 6px
+    ),
+    linear-gradient(160deg, #f97040 0%, var(--red-accent) 100%);
+  border-color: #a02020;
+  box-shadow: 0 5px 0 #a02020, 0 6px 12px rgba(0,0,0,0.2);
+  padding: 7px 16px;
+  font-size: var(--text-sm);
+}
+
+button#logoutBtn:hover { box-shadow: 0 7px 0 #a02020, 0 8px 16px rgba(0,0,0,0.25); }
+
+/* ─── Inputs & Selects ──────────────────────────────────── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface);
+  border: 3px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  width: 100%;
+  max-width: 380px;
+  outline: none;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.08), 0 2px 0 var(--border);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]:focus,
+select:focus {
+  border-color: var(--grass);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.08), 0 0 0 3px rgba(126,200,80,0.3);
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8'%3E%3Cpath d='M0 0l7 8 7-8z' fill='%235aab30'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+}
+
+/* ─── Tables ─────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  margin-top: 16px;
+}
+
+thead tr th {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  color: var(--cream);
+  background: linear-gradient(90deg, var(--wood) 0%, var(--wood-light) 100%);
+  padding: 12px 18px;
+  text-align: left;
+  letter-spacing: 0.5px;
+  border: none;
+}
+
+thead tr th:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+thead tr th:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+tbody tr {
+  background: var(--surface);
+  box-shadow: 0 3px 0 var(--border), 0 4px 10px rgba(0,0,0,0.1);
+  transition: transform 0.15s, box-shadow 0.15s;
+  animation: slideUp 0.4s ease both;
+}
+
+tbody tr:hover {
+  transform: translateY(-2px) scale(1.005);
+  box-shadow: 0 5px 0 var(--grass-dark), 0 6px 16px rgba(0,0,0,0.15);
+}
+
+tbody tr td {
+  padding: 12px 18px;
+  font-weight: 700;
+  border: none;
+  color: var(--text);
+}
+
+tbody tr td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+tbody tr td:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+/* ─── Cards / Panels ─────────────────────────────────────── */
+.card, section {
+  background: var(--surface);
+  border: 3px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 0 var(--border), 0 8px 20px rgba(0,0,0,0.12);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover, section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 var(--border), 0 10px 24px rgba(0,0,0,0.15);
+}
+
+/* ─── Profile Page ───────────────────────────────────────── */
+#profilePhoto {
+  width: 130px;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 5px solid var(--sun);
+  box-shadow: 0 6px 0 var(--wood-dark), 0 8px 20px rgba(0,0,0,0.25);
+  display: block;
+  margin: 0 auto 16px;
+  transition: transform 0.3s;
+}
+
+#profilePhoto:hover { transform: scale(1.06) rotate(3deg); }
+
+#playerName {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--sun);
+  text-shadow: 2px 2px 0 var(--wood-dark);
+}
+
+#studentId {
+  text-align: center;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  font-size: var(--text-sm);
+  margin-bottom: 20px;
+}
+
+/* Stat badges */
+#eloScore, #playerRank {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  color: var(--grass);
+  text-shadow: 2px 2px 0 var(--grass-dark);
+  display: block;
+}
+
+/* ─── Game Board ─────────────────────────────────────────── */
+#board {
+  display: grid;
+  grid-template-columns: repeat(3, 90px);
+  grid-template-rows: repeat(3, 90px);
+  gap: 10px;
+  margin: 24px auto;
+  width: fit-content;
+}
+
+#board button {
+  width: 90px;
+  height: 90px;
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  color: var(--sun);
+  box-shadow: 0 5px 0 var(--border), 0 6px 12px rgba(0,0,0,0.15);
+  transition: transform 0.12s, box-shadow 0.12s, background 0.15s;
+  padding: 0;
+}
+
+#board button:hover:not(:disabled) {
+  background: var(--surface2);
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 8px 0 var(--border), 0 10px 18px rgba(0,0,0,0.2);
+}
+
+#board button:active { transform: translateY(3px) scale(0.96); box-shadow: 0 2px 0 var(--border); }
+
+#result {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  text-align: center;
+  color: var(--sun);
+  text-shadow: 2px 2px 0 var(--wood-dark);
+  animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+#turn, #players {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  text-align: center;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+/* ─── Login Page ─────────────────────────────────────────── */
+#webcam {
+  display: block;
+  margin: 0 auto 12px;
+  border-radius: var(--radius-lg);
+  border: 4px solid var(--wood);
+  box-shadow: 0 6px 0 var(--wood-dark), 0 8px 20px rgba(0,0,0,0.25);
+  max-width: 380px;
+  width: 100%;
+}
+
+#status {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  text-align: center;
+  margin: 14px 0;
+  color: var(--teal);
+  letter-spacing: 1px;
+}
+
+/* ─── Popup ──────────────────────────────────────────────── */
+#popup {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--surface);
+  border: 4px solid var(--wood);
+  border-radius: var(--radius-xl);
+  padding: 32px 40px;
+  text-align: center;
+  box-shadow: 0 10px 0 var(--wood-dark), 0 12px 40px rgba(0,0,0,0.35);
+  z-index: 200;
+  animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+  min-width: 280px;
+}
+
+#popupText {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+/* ─── Links ──────────────────────────────────────────────── */
+a {
+  color: var(--grass);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover { color: var(--sun); text-decoration: underline; }
+
+/* ─── Search/Filter Row ──────────────────────────────────── */
+#searchInput, #statusFilter {
+  display: inline-block;
+  width: auto;
+  margin-right: 10px;
+  margin-bottom: 16px;
+}
+
+/* ─── Settings Page ──────────────────────────────────────── */
+section h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--grass);
+  margin-bottom: 16px;
+  border-bottom: 3px dashed var(--border);
+  padding-bottom: 8px;
+}
+
+section div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+section div > span {
+  font-weight: 800;
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  min-width: 130px;
+}
+
+/* ─── Lobby Challenge Button ─────────────────────────────── */
+tbody td button {
+  padding: 7px 16px;
+  font-size: var(--text-sm);
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      transparent, transparent 5px,
+      rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 6px
+    ),
+    linear-gradient(160deg, var(--teal) 0%, #2a9d9d 100%);
+  border-color: #1a7070;
+  box-shadow: 0 4px 0 #1a7070, 0 5px 10px rgba(0,0,0,0.15);
+}
+
+tbody td button:hover { box-shadow: 0 6px 0 #1a7070, 0 7px 14px rgba(0,0,0,0.2); }
+
+/* ─── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--bg2); border-radius: 10px; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--wood-light), var(--wood));
+  border-radius: 10px;
+  border: 2px solid var(--bg2);
+}
+
+/* ─── Animations ─────────────────────────────────────────── */
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.7); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  0%   { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Stagger table rows */
+tbody tr:nth-child(1) { animation-delay: 0.05s; }
+tbody tr:nth-child(2) { animation-delay: 0.10s; }
+tbody tr:nth-child(3) { animation-delay: 0.15s; }
+tbody tr:nth-child(4) { animation-delay: 0.20s; }
+tbody tr:nth-child(5) { animation-delay: 0.25s; }
+tbody tr:nth-child(6) { animation-delay: 0.30s; }
+tbody tr:nth-child(n+7) { animation-delay: 0.35s; }
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 600px) {
+  nav { padding: 10px 14px; gap: 8px; }
+  nav > span { font-size: var(--text-xl); }
+  nav a { padding: 5px 10px; font-size: 0.75rem; }
+  main { padding: 20px 12px 50px; }
+  h1  { font-size: var(--text-2xl); }
+  #board { grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 72px); gap: 8px; }
+  #board button { width: 72px; height: 72px; font-size: 1.8rem; }
+  input[type="text"], select { max-width: 100%; }
+}
