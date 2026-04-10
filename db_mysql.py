@@ -4,7 +4,6 @@ import os
 
 load_dotenv()
 
-
 def get_connection():
     return pymysql.connect(
         host=os.getenv("MYSQL_HOST"),
@@ -13,10 +12,8 @@ def get_connection():
         database=os.getenv("MYSQL_DB"),
         cursorclass=pymysql.cursors.DictCursor
     )
-
-
 def create_table(conn):
-    cursor = conn.cursor()
+    cursor=conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             uid VARCHAR(50) PRIMARY KEY,
@@ -28,11 +25,11 @@ def create_table(conn):
     conn.commit()
 
 
-def insert_user(conn, uid: str, name: str):
-    cursor = conn.cursor()
+def insert_user(conn, uid:str,name:str):
+    cursor=conn.cursor()
     cursor.execute("""
-        INSERT INTO users (uid, name)
-        VALUES (%s, %s)
+        INSERT INTO users(uid,name)
+        VALUES(%s,%s)
         ON DUPLICATE KEY UPDATE name=%s
-    """, (uid, name, name))
+    """, (uid,name,name))
     conn.commit()
