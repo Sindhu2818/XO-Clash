@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+        <title>XO — Lobby</title>
+    </head>
+    <body>
+        <main>
+            <nav>
+                <span>XOClash</span>
+                <div>
+                    <a href="lobby.html">Lobby</a>
+                    <a href="game.html">Game</a>
+                    <a href="leaderboard.html">Leaderboard</a>
+                    <a href="profile.html">Profile</a>
+                </div>
+                <div>
+                    <a href="settings.html">⚙️</a>
+                    <button id="logoutBtn">Logout</button>
+                </div>
+            </nav>
+            <h1>🟢 Player Lobby</h1>
+
+            <table border="1" id="playersTable">
+                <thead>
+                    <tr>
+                        <th>UID</th>
+                        <th>Name</th>
+                        <th>Elo</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS will fill -->
+                </tbody>
+            </table>
+
+        <!-- Challenge Popup -->
+        <div id="popup" style="display:none; border:1px solid black; padding:10px;">
+            <p id="popupText"></p>
+            <button onclick="accept()">Accept</button>
+            <button onclick="decline()">Decline</button>
+        </div>
+    </main>
+        <script src="main.js"></script>
+
+    </body>
+</html>
