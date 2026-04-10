@@ -1,10 +1,5 @@
 from fastapi import FastAPI, Request, Response, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-<<<<<<< HEAD
-
-from db_mysql import get_connection
-from db_mongo import get_db
-=======
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
@@ -12,7 +7,6 @@ import pymysql
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
->>>>>>> df19400 (Updated files)
 
 from utils.facial_recognition_module import find_closest_match
 
@@ -21,8 +15,6 @@ load_dotenv()
 app = FastAPI()
 
 # =========================
-<<<<<<< HEAD
-=======
 # CONFIG
 # =========================
 SESSION_SECRET = os.getenv("SESSION_SECRET", "change-this-to-a-long-random-secret")
@@ -31,7 +23,6 @@ SESSION_MAX_AGE = 60 * 60 * 8  # 8 hours
 serializer = URLSafeTimedSerializer(SESSION_SECRET)
 
 # =========================
->>>>>>> df19400 (Updated files)
 # CORS
 # =========================
 app.add_middleware(
@@ -46,10 +37,6 @@ app.add_middleware(
 # DATABASE CONNECTIONS
 # =========================
 
-<<<<<<< HEAD
-mysql_conn = get_connection()
-mongo_db = get_db()
-=======
 def get_mysql():
     return pymysql.connect(
         host=os.getenv("MYSQL_HOST", "127.0.0.1"),
@@ -62,8 +49,8 @@ def get_mysql():
 
 mongo_client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017/"))
 mongo_db = mongo_client["arena_db"]
->>>>>>> df19400 (Updated files)
 images_collection = mongo_db["profile_images"]
+
 
 # =========================
 # SESSION HELPERS
@@ -95,12 +82,9 @@ def get_current_user(request: Request) -> dict:
         raise HTTPException(status_code=401, detail="Session expired or invalid")
     return payload
 
+
 # =========================
-<<<<<<< HEAD
-# HELPERS
-=======
 # DB HELPERS
->>>>>>> df19400 (Updated files)
 # =========================
 
 def get_all_images() -> dict:
@@ -110,21 +94,6 @@ def get_all_images() -> dict:
     return data
 
 
-<<<<<<< HEAD
-def get_user(uid):
-    with mysql_conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM users WHERE uid = %s", (uid,))
-        return cursor.fetchone()
-
-
-def set_online(uid):
-    with mysql_conn.cursor() as cursor:
-        cursor.execute(
-            "UPDATE users SET is_online = TRUE WHERE uid = %s",
-            (uid,)
-        )
-    mysql_conn.commit()
-=======
 def db_get_user(uid: str) -> dict | None:
     conn = get_mysql()
     try:
@@ -164,7 +133,7 @@ def db_get_all_users() -> list:
 
 class LoginRequest(BaseModel):
     image: str  # full data-URL or bare base64
->>>>>>> df19400 (Updated files)
+
 
 # =========================
 # ROUTES
@@ -175,13 +144,6 @@ def home():
     return {"msg": "Arena server running"}
 
 
-<<<<<<< HEAD
-@app.post("/login")
-def login(req: LoginRequest):
-    try:
-        image_data = req.image.split(",")[1]
-
-=======
 # ─── PHASE 2: Login ───────────────────────────────────────────────────────────
 
 @app.post("/login")
@@ -194,7 +156,6 @@ def login(req: LoginRequest, response: Response):
             image_data = req.image
 
         # Fetch all profile images from MongoDB
->>>>>>> df19400 (Updated files)
         db_images_dict = get_all_images()
         if not db_images_dict:
             return JSONResponse(
@@ -202,30 +163,17 @@ def login(req: LoginRequest, response: Response):
                 content={"success": False, "detail": "No profile images in database. Run the scraper first."}
             )
 
-<<<<<<< HEAD
-        if not db_images_dict:
-            return {"success": False}
-
-=======
         # Run facial recognition
->>>>>>> df19400 (Updated files)
         uid = find_closest_match(image_data, db_images_dict)
 
         if uid is None:
             return {"success": False, "detail": "Face not recognized"}
 
-<<<<<<< HEAD
-        user = get_user(uid)
-=======
         # Cross-reference with MySQL
         user = db_get_user(uid)
->>>>>>> df19400 (Updated files)
         if not user:
             return {"success": False, "detail": "User record not found in MySQL"}
 
-<<<<<<< HEAD
-        set_online(uid)
-=======
         # Mark online in MySQL
         db_set_online(uid, True)
 
@@ -239,7 +187,6 @@ def login(req: LoginRequest, response: Response):
             max_age=SESSION_MAX_AGE,
             path="/"
         )
->>>>>>> df19400 (Updated files)
 
         return {
             "success": True,
@@ -247,12 +194,6 @@ def login(req: LoginRequest, response: Response):
             "name": user["name"]
         }
 
-<<<<<<< HEAD
-    except Exception:
-        return {"success": False}
-
-
-=======
     except Exception as e:
         print("Login error:", e)
         return {"success": False, "detail": "Internal server error"}
@@ -277,18 +218,10 @@ def whoami(current_user: dict = Depends(get_current_user)):
 
 # ─── PHASE 1 / PHASE 4: Users list (used by lobby & leaderboard) ─────────────
 
->>>>>>> df19400 (Updated files)
 @app.get("/users")
 @app.get("/api/users")
 def get_users():
-<<<<<<< HEAD
-    with mysql_conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM users")
-        users = cursor.fetchall()
-
-=======
     users = db_get_all_users()
->>>>>>> df19400 (Updated files)
     return [
         {
             "uid": u["uid"],
