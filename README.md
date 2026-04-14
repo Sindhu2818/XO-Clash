@@ -7,3 +7,12 @@ The assignment is available [here](https://cs6201.github.io/s26/assets/Project.p
 [This](https://hackmd.io/@iss-spring-2026/S1WBWzzoWe) is where you can ask questions about it, for which you will receive answers [here](https://hackmd.io/@iss-spring-2026/ryZ_WGzibx).
 
 Good luck, have fun!
+
+
+mysql -u root -p
+use arena_db
+SELECT * FROM users;
+pip install face-recognition numpy Pillow
+sudo dnf install python3.11 python3.11-devel
+python3.11 -m pip install face-recognition --break-system-packages
+pip install git+https://github.com/ageitgey/face_recognition_models

@@ -9,22 +9,18 @@ def fetch_image(url: str):
     try:
         if not url.startswith("http"):
             url = "https://" + url
+
         full_url = f"{url}/images/pfp.jpg"
         res = requests.get(full_url, timeout=5)
+
         if res.status_code == 200:
             return base64.b64encode(res.content).decode("utf-8")
         else:
-            print(f"[WARN] No image at {full_url} — status {res.status_code}")
-            return None
-    except requests.exceptions.Timeout:
-        print(f"[ERROR] Timeout fetching {url}")
-        return None
-    except requests.exceptions.ConnectionError:
-        print(f"[ERROR] Connection error for {url}")
-        return None
+            print(f"[WARN] No image at {full_url}")
     except Exception as e:
         print(f"[ERROR] {url}: {e}")
-        return None
+
+    return None
 
 
 def run_pipeline(csv_file: str):
@@ -33,35 +29,32 @@ def run_pipeline(csv_file: str):
 
     create_table(mysql_conn)
 
-    success_count = 0
-    fail_count = 0
-
     with open(csv_file, newline="") as file:
-        reader = csv.DictReader(file)
+        reader = csv.DictReader(file)  # reads each row as dict :contentReference[oaicite:0]{index=0}
 
         for row in reader:
-            uid = row["uid"]
-            name = row["name"]
-            website = row["website_url"]
+            uid = row.get("uid")
+            name = row.get("name")
+            website = row.get("website_url")
 
-            print(f"Processing {uid} ({name})...")
+            if not uid or not name or not website:
+                continue
+
+            print(f"Processing {uid}...")
 
             image = fetch_image(website)
 
-            try:
-                insert_user(mysql_conn, uid, name)
-                if image:
+            if image:
+                try:
+                    insert_user(mysql_conn, uid, name)
                     upsert_image(mongo_db, uid, image)
-                    print(f"  ✅ MySQL + MongoDB updated for {uid}")
-                else:
-                    print(f"  ⚠️  MySQL updated, no image for {uid}")
-                success_count += 1
-            except Exception as e:
-                print(f"  [DB ERROR] {uid}: {e}")
-                fail_count += 1
+                    print("  ✅ Stored")
+                except Exception as e:
+                    print(f"  [DB ERROR] {e}")
+            else:
+                print("  ⚠️ Skipped (no image)")
 
     mysql_conn.close()
-    print(f"\nDone. {success_count} succeeded, {fail_count} failed.")
 
 
 if __name__ == "__main__":
