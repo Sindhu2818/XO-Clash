@@ -9,6 +9,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 import os
+import base64
 
 from utils.facial_recognition_module import find_closest_match, build_encodings_cache
 
@@ -16,17 +17,16 @@ load_dotenv()
 
 app = FastAPI()
 
-# =========================
-# CONFIG
-# =========================
+from game import router as game_router
+app.include_router(game_router)
+
+# ----- Session config -----
 SESSION_SECRET = os.getenv("SESSION_SECRET", "secret")
 SESSION_COOKIE = "arena_session"
 SESSION_MAX_AGE = 60 * 60 * 8
 serializer = URLSafeTimedSerializer(SESSION_SECRET)
 
-# =========================
-# CORS
-# =========================
+# ----- CORS -----
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5500",
@@ -42,19 +42,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# =========================
-# ORIGIN BLOCK
-# =========================
 @app.middleware("http")
 async def block_unknown_origins(request: Request, call_next):
     origin = request.headers.get("origin")
-    if origin is not None and origin not in ALLOWED_ORIGINS:
+    if origin and origin not in ALLOWED_ORIGINS:
         return JSONResponse(status_code=403, content={"detail": "Blocked origin"})
     return await call_next(request)
 
-# =========================
-# DATABASE
-# =========================
+# ----- Database connections -----
 def get_mysql():
     return pymysql.connect(
         host=os.getenv("MYSQL_HOST"),
@@ -68,9 +63,7 @@ mongo_client = MongoClient(os.getenv("MONGO_URI"))
 mongo_db = mongo_client["arena_db"]
 images_collection = mongo_db["profile_images"]
 
-# =========================
-# SESSION
-# =========================
+# ----- Session helpers -----
 def create_session(uid, name):
     return serializer.dumps({"uid": uid, "name": name})
 
@@ -89,18 +82,19 @@ def get_current_user(request: Request):
         raise HTTPException(status_code=401)
     return data
 
-# =========================
-# HELPERS
-# =========================
+# ----- Startup: build face encodings cache -----
 encodings_cache = {}
 
 @app.on_event("startup")
 async def startup():
     global encodings_cache
-    print("Building encodings cache, please wait...")
+    print("Building face encodings cache, please wait...")
 
     def build():
-        db_images = {doc["uid"]: doc["image"] for doc in images_collection.find({}, {"uid": 1, "image": 1})}
+        db_images = {
+            doc["uid"]: doc["image"]
+            for doc in images_collection.find({}, {"uid": 1, "image": 1})
+        }
         print(f"Found {len(db_images)} images in MongoDB")
         return build_encodings_cache(db_images)
 
@@ -108,8 +102,9 @@ async def startup():
     with ThreadPoolExecutor() as pool:
         encodings_cache = await loop.run_in_executor(pool, build)
 
-    print("✅ Cache ready!")
+    print("Face encodings cache ready!")
 
+# ----- DB helpers -----
 def db_get_user(uid):
     conn = get_mysql()
     try:
@@ -128,15 +123,14 @@ def db_set_online(uid, val):
     finally:
         conn.close()
 
-# =========================
-# MODEL
-# =========================
+# ----- Request models -----
 class LoginRequest(BaseModel):
     image: str
 
-# =========================
-# LOGIN
-# =========================
+# =============================================================
+# AUTH ROUTES
+# =============================================================
+
 @app.post("/login")
 def login(req: LoginRequest, response: Response):
     try:
@@ -164,28 +158,114 @@ def login(req: LoginRequest, response: Response):
         return {"success": True, "uid": uid, "name": user["name"]}
 
     except Exception as e:
-        print(e)
+        print("Login error:", e)
         return {"success": False}
 
-# =========================
-# LOGOUT
-# =========================
+
 @app.post("/logout")
 def logout(response: Response, user=Depends(get_current_user)):
     db_set_online(user["uid"], False)
     response.delete_cookie(SESSION_COOKIE)
     return {"success": True}
 
-# =========================
-# SESSION CHECK
-# =========================
+
 @app.get("/me")
 def me(user=Depends(get_current_user)):
     return user
 
-# =========================
+# =============================================================
+# API ROUTES (used by frontend JS)
+# =============================================================
+
+@app.get("/api/users")
+def get_all_users(user=Depends(get_current_user)):
+    """Returns all players sorted by elo — used by leaderboard."""
+    conn = get_mysql()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT uid, name, elo_rating, is_online FROM users ORDER BY elo_rating DESC")
+            return cur.fetchall()
+    finally:
+        conn.close()
+
+
+@app.get("/api/users/{uid}")
+def get_user(uid: str, user=Depends(get_current_user)):
+    """Returns a single player's data."""
+    conn = get_mysql()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT uid, name, elo_rating, is_online FROM users WHERE uid=%s", (uid,))
+            player = cur.fetchone()
+            if not player:
+                raise HTTPException(status_code=404, detail="User not found")
+            return player
+    finally:
+        conn.close()
+
+
+@app.get("/api/images/{uid}")
+def get_profile_image(uid: str, user=Depends(get_current_user)):
+    """Returns a player's profile image as a base64 string."""
+    doc = images_collection.find_one({"uid": uid}, {"image": 1})
+    if not doc or "image" not in doc:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    image_data = doc["image"]
+
+    # image_data could be a base64 string or raw bytes from BSON Binary
+    if isinstance(image_data, str):
+        return {"image": image_data}
+    else:
+        return {"image": base64.b64encode(bytes(image_data)).decode("utf-8")}
+
+
+@app.get("/api/matches/{uid}")
+def get_match_history(uid: str, user=Depends(get_current_user)):
+    """Returns the last 20 matches for a player, with opponent names."""
+    conn = get_mysql()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    m.outcome,
+                    m.played_at,
+                    CASE WHEN m.player1_uid = %s THEN m.player2_uid ELSE m.player1_uid END AS opponent_uid,
+                    CASE
+                        WHEN m.outcome = 'draw'   THEN 'draw'
+                        WHEN m.winner_uid = %s     THEN 'win'
+                        ELSE 'loss'
+                    END AS result
+                FROM matches m
+                WHERE m.player1_uid = %s OR m.player2_uid = %s
+                ORDER BY m.played_at DESC
+                LIMIT 20
+            """, (uid, uid, uid, uid))
+            rows = cur.fetchall()
+
+        matches = []
+        for row in rows:
+            # Look up opponent name
+            with conn.cursor() as cur:
+                cur.execute("SELECT name FROM users WHERE uid=%s", (row["opponent_uid"],))
+                opp = cur.fetchone()
+
+            matches.append({
+                "opponent_uid":  row["opponent_uid"],
+                "opponent_name": opp["name"] if opp else row["opponent_uid"],
+                "outcome":       row["result"],
+                "played_at":     str(row["played_at"]) if row["played_at"] else None
+            })
+
+        return matches
+
+    finally:
+        conn.close()
+
+# =============================================================
 # STATIC FILE SERVING
-# =========================
+# =============================================================
+
 @app.get("/")
 def root():
     return FileResponse("login.html")
@@ -233,3 +313,11 @@ def serve_profilejs():
 @app.get("/style.css")
 def serve_css():
     return FileResponse("style.css")
+
+@app.get("/game.js")
+def serve_gamejs():
+    return FileResponse("game.js")
+
+@app.get("/lobby.js")
+def serve_lobbyjs():
+    return FileResponse("lobby.js")

@@ -1,15 +1,5 @@
 const API = "http://127.0.0.1:8000";
 
-// =========================
-// SESSION CHECK (lobby only)
-// =========================
-if (window.location.pathname.includes("lobby.html")) {
-    fetch(API + "/me", { credentials: "include" })
-        .then(res => {
-            if (!res.ok) window.location.href = "login.html";
-        })
-        .catch(() => window.location.href = "login.html");
-}
 
 // =========================
 // LOGOUT (any page with logoutBtn)

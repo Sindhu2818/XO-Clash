@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>XOClash — Profile</title>
 </head>
 <body>
@@ -20,28 +20,51 @@
             <button id="logoutBtn">Logout</button>
         </div>
     </nav>
+
     <main>
-        <!-- Profile photo fetched from MongoDB (scraped base64 image) -->
-        <img id="profilePhoto" src="dummy_600x400_ffffff_cccccc.png" alt="Profile Photo">
+        <h1>👤 Player Profile</h1>
 
-        <h2 id="playerName">Loading...</h2>
-        <p id="studentId">—</p>
+        <section style="text-align:center; max-width:500px; margin:0 auto 24px;">
+            <img id="profilePhoto"
+                 src="https://via.placeholder.com/130?text=?"
+                 alt="Profile Photo">
 
-        <div>
-            <div>
-                <span id="eloScore">—</span>
-                <span>Elo Score</span>
+            <p id="playerName" style="margin-top:12px;">Loading...</p>
+            <p id="studentId"></p>
+            <p id="statusText" style="margin-top:4px;"></p>
+
+            <div style="display:flex; justify-content:center; gap:40px; margin-top:20px;">
+                <div>
+                    <span id="eloScore">—</span>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-top:4px;">Elo Rating</p>
+                </div>
+                <div>
+                    <span id="playerRank">—</span>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-top:4px;">Rank</p>
+                </div>
+                <div>
+                    <span id="totalGames" style="font-family:var(--font-display); font-size:var(--text-3xl); color:var(--teal); text-shadow:2px 2px 0 #1a7070;">—</span>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-top:4px;">Games</p>
+                </div>
             </div>
-            <div>
-                <span id="playerRank">—</span>
-                <span>Rank</span>
-            </div>
-        </div>
+        </section>
 
-        <div>
-            <p>Status: <span id="statusText">—</span></p>
-        </div>
+        <section>
+            <h2>📜 Match History</h2>
+            <p id="noMatches" style="text-align:center; color:var(--text-muted); display:none;">No matches played yet.</p>
+            <table id="matchTable" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Opponent</th>
+                        <th>Result</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="matchHistory"></tbody>
+            </table>
+        </section>
     </main>
+
     <script src="profile.js"></script>
 </body>
 </html>
