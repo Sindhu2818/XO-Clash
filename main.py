@@ -1,14 +1,16 @@
 from fastapi import FastAPI, Request, Response, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import pymysql
 from pymongo import MongoClient
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 import os
 
-from utils.facial_recognition_module import find_closest_match
+from utils.facial_recognition_module import find_closest_match, build_encodings_cache
 
 load_dotenv()
 
@@ -23,11 +25,13 @@ SESSION_MAX_AGE = 60 * 60 * 8
 serializer = URLSafeTimedSerializer(SESSION_SECRET)
 
 # =========================
-# CORS (FIXED)
+# CORS
 # =========================
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://127.0.0.1:5500"
+    "http://127.0.0.1:5500",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000"
 ]
 
 app.add_middleware(
@@ -39,15 +43,13 @@ app.add_middleware(
 )
 
 # =========================
-# FIXED ORIGIN BLOCK
+# ORIGIN BLOCK
 # =========================
 @app.middleware("http")
 async def block_unknown_origins(request: Request, call_next):
     origin = request.headers.get("origin")
-
     if origin is not None and origin not in ALLOWED_ORIGINS:
         return JSONResponse(status_code=403, content={"detail": "Blocked origin"})
-
     return await call_next(request)
 
 # =========================
@@ -82,18 +84,31 @@ def get_current_user(request: Request):
     token = request.cookies.get(SESSION_COOKIE)
     if not token:
         raise HTTPException(status_code=401)
-
     data = decode_session(token)
     if not data:
         raise HTTPException(status_code=401)
-
     return data
 
 # =========================
 # HELPERS
 # =========================
-def get_all_images():
-    return {doc["uid"]: doc["image"] for doc in images_collection.find({}, {"uid":1, "image":1})}
+encodings_cache = {}
+
+@app.on_event("startup")
+async def startup():
+    global encodings_cache
+    print("Building encodings cache, please wait...")
+
+    def build():
+        db_images = {doc["uid"]: doc["image"] for doc in images_collection.find({}, {"uid": 1, "image": 1})}
+        print(f"Found {len(db_images)} images in MongoDB")
+        return build_encodings_cache(db_images)
+
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as pool:
+        encodings_cache = await loop.run_in_executor(pool, build)
+
+    print("✅ Cache ready!")
 
 def db_get_user(uid):
     conn = get_mysql()
@@ -125,10 +140,8 @@ class LoginRequest(BaseModel):
 @app.post("/login")
 def login(req: LoginRequest, response: Response):
     try:
-        image_data = req.image.split(",",1)[-1]
-
-        db_images = get_all_images()
-        uid = find_closest_match(image_data, db_images)
+        image_data = req.image.split(",", 1)[-1]
+        uid = find_closest_match(image_data, encodings_cache)
 
         if not uid:
             return {"success": False}
@@ -140,12 +153,11 @@ def login(req: LoginRequest, response: Response):
         db_set_online(uid, True)
 
         token = create_session(uid, user["name"])
-
         response.set_cookie(
             key=SESSION_COOKIE,
             value=token,
             httponly=True,
-            samesite="lax",   # important for cookies :contentReference[oaicite:0]{index=0}
+            samesite="lax",
             max_age=SESSION_MAX_AGE
         )
 
@@ -170,3 +182,54 @@ def logout(response: Response, user=Depends(get_current_user)):
 @app.get("/me")
 def me(user=Depends(get_current_user)):
     return user
+
+# =========================
+# STATIC FILE SERVING
+# =========================
+@app.get("/")
+def root():
+    return FileResponse("login.html")
+
+@app.get("/login.html")
+def serve_login():
+    return FileResponse("login.html")
+
+@app.get("/lobby.html")
+def serve_lobby():
+    return FileResponse("lobby.html")
+
+@app.get("/game.html")
+def serve_game():
+    return FileResponse("game.html")
+
+@app.get("/leaderboard.html")
+def serve_leaderboard():
+    return FileResponse("Leaderboard.html")
+
+@app.get("/profile.html")
+def serve_profile():
+    return FileResponse("profile.html")
+
+@app.get("/settings.html")
+def serve_settings():
+    return FileResponse("settings.html")
+
+@app.get("/main.js")
+def serve_mainjs():
+    return FileResponse("main.js")
+
+@app.get("/leaderboard.js")
+def serve_leaderboardjs():
+    return FileResponse("leaderboard.js")
+
+@app.get("/settings.js")
+def serve_settingsjs():
+    return FileResponse("settings.js")
+
+@app.get("/profile.js")
+def serve_profilejs():
+    return FileResponse("profile.js")
+
+@app.get("/style.css")
+def serve_css():
+    return FileResponse("style.css")

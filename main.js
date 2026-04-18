@@ -1,22 +1,51 @@
 const API = "http://127.0.0.1:8000";
 
+// =========================
+// SESSION CHECK (lobby only)
+// =========================
+if (window.location.pathname.includes("lobby.html")) {
+    fetch(API + "/me", { credentials: "include" })
+        .then(res => {
+            if (!res.ok) window.location.href = "login.html";
+        })
+        .catch(() => window.location.href = "login.html");
+}
+
+// =========================
+// LOGOUT (any page with logoutBtn)
+// =========================
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+        await fetch(API + "/logout", {
+            method: "POST",
+            credentials: "include"
+        });
+        window.location.href = "login.html";
+    });
+}
+
+// =========================
+// WEBCAM + LOGIN (login.html only)
+// =========================
 const video = document.getElementById("webcam");
 
-navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => video.srcObject = stream)
-    .catch(() => {
-        document.getElementById("status").innerText = "Camera denied ❌";
-    });
+if (video) {
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => video.srcObject = stream)
+        .catch(() => {
+            document.getElementById("status").innerText = "Camera denied ❌";
+        });
+}
 
 function capture() {
-    if (video.videoWidth === 0) return null;
+    if (!video || video.videoWidth === 0) return null;
 
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
     ctx.drawImage(video, 0, 0);
 
     return canvas.toDataURL("image/jpeg");
@@ -35,7 +64,7 @@ async function login() {
     try {
         const res = await fetch(API + "/login", {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({ image: img })
         });
