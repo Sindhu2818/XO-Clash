@@ -3,6 +3,7 @@ from fastapi.routing import APIRouter
 import pymysql
 import json
 import os
+import asyncio
 
 router = APIRouter()
 
@@ -11,7 +12,8 @@ router = APIRouter()
 lobby_connections = {}
 game_rooms = {}
 player_room = {}
-leaderboard_connections = {} 
+leaderboard_connections = {}
+
 @router.websocket("/ws/leaderboard")
 async def leaderboard_ws(websocket: WebSocket):
     await websocket.accept()
@@ -24,6 +26,7 @@ async def leaderboard_ws(websocket: WebSocket):
         pass
     finally:
         leaderboard_connections.pop(conn_id, None)
+
 # ----- MySQL helpers -----
 
 def get_mysql():
@@ -143,9 +146,9 @@ async def finish_match(room_id, winner_uid=None, outcome="win"):
     room = game_rooms.get(room_id)
     if not room:
         return
-    if room.get("finished"): 
-        return # ← add this
-    room["finished"] = True 
+    if room.get("finished"):
+        return
+    room["finished"] = True
     p1, p2 = room["players"]
 
     r1 = get_elo(p1)
@@ -174,19 +177,20 @@ async def finish_match(room_id, winner_uid=None, outcome="win"):
     set_online(p1, True)
     set_online(p2, True)
 
+    # Broadcast leaderboard update
     msg = json.dumps({"type": "leaderboard_update"})
-
     for uid, data in list(lobby_connections.items()):
         try:
             await data["ws"].send_text(msg)
         except Exception:
             pass
-
     for conn_id, ws in list(leaderboard_connections.items()):
         try:
             await ws.send_text(msg)
         except Exception:
             pass
+
+    # Clear room state AFTER setting players online
     player_room.pop(p1, None)
     player_room.pop(p2, None)
     game_rooms.pop(room_id, None)
@@ -262,8 +266,15 @@ async def lobby_ws(websocket: WebSocket):
     finally:
         if uid:
             lobby_connections.pop(uid, None)
-            if uid not in player_room:  # ← only set offline if NOT in a game
-                set_online(uid, False)
+            if uid not in player_room:
+                # Small delay to allow players returning from a finished game
+                # to reconnect their lobby WS before we mark them offline.
+                # finish_match removes them from player_room, so without this
+                # delay they'd be set offline immediately on game WS close.
+                await asyncio.sleep(0.5)
+                # Only set offline if they haven't reconnected to the lobby
+                if uid not in lobby_connections:
+                    set_online(uid, False)
             await broadcast_lobby()
 
 # =============================================================
@@ -296,7 +307,7 @@ async def game_ws(websocket: WebSocket, room_id: str):
             "opponent_name": room["names"][opponent_uid]
         }))
 
-        # ✅ Always send board immediately
+        # Always send board immediately
         await websocket.send_text(json.dumps({
             "type": "board_update",
             "board": room["board"],
@@ -310,7 +321,7 @@ async def game_ws(websocket: WebSocket, room_id: str):
             if msg["type"] == "move":
                 cell = msg["cell"]
 
-                # ✅ bounds check
+                # Bounds check
                 if cell < 0 or cell > 8:
                     continue
 
@@ -357,6 +368,7 @@ async def game_ws(websocket: WebSocket, room_id: str):
 
     finally:
         if uid and room_id in game_rooms:
+            # Room still exists = player disconnected mid-game (forfeit)
             room = game_rooms[room_id]
             opponents = [p for p in room["players"] if p != uid]
             if opponents:
@@ -367,5 +379,7 @@ async def game_ws(websocket: WebSocket, room_id: str):
                     "winner": other_uid
                 })
                 await finish_match(room_id, winner_uid=other_uid)
-            # forfeiting player goes offline, winner stays online
+            # Only the forfeiting player goes offline
             set_online(uid, False)
+        # If room is gone, finish_match already handled everything —
+        # both players were set online, don't touch their status here

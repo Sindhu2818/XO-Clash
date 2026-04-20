@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import pymysql
-from pymongo import MongoClient,ReadPreference
+from pymongo import MongoClient, ReadPreference
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
@@ -19,6 +19,7 @@ app = FastAPI()
 
 from game import router as game_router
 app.include_router(game_router)
+
 # ----- Session config -----
 SESSION_SECRET = os.getenv("SESSION_SECRET", "secret")
 SESSION_COOKIE = "arena_session"
@@ -91,15 +92,15 @@ async def startup():
 
     def build():
         db_images = {
-        doc["uid"]: doc["image"]
-        for doc in images_collection.with_options(
-            read_preference=ReadPreference.SECONDARY_PREFERRED
-        ).find({}, {"uid": 1, "image": 1})
-}
-        print(f"Found {len(db_images)} images in MongoDB")  # already there
-        print("Starting encoding build...")  # add this
+            doc["uid"]: doc["image"]
+            for doc in images_collection.with_options(
+                read_preference=ReadPreference.SECONDARY_PREFERRED
+            ).find({}, {"uid": 1, "image": 1})
+        }
+        print(f"Found {len(db_images)} images in MongoDB")
+        print("Starting encoding build...")
         result = build_encodings_cache(db_images)
-        print("Encoding build done!")  # add this
+        print("Encoding build done!")
         return result
 
     loop = asyncio.get_event_loop()
@@ -217,7 +218,6 @@ def get_profile_image(uid: str, user=Depends(get_current_user)):
 
     image_data = doc["image"]
 
-    # image_data could be a base64 string or raw bytes from BSON Binary
     if isinstance(image_data, str):
         return {"image": image_data}
     else:
@@ -249,7 +249,6 @@ def get_match_history(uid: str, user=Depends(get_current_user)):
 
         matches = []
         for row in rows:
-            # Look up opponent name
             with conn.cursor() as cur:
                 cur.execute("SELECT name FROM users WHERE uid=%s", (row["opponent_uid"],))
                 opp = cur.fetchone()
