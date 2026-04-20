@@ -402,6 +402,48 @@ tbody tr td:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; 
   display: block;
 }
 
+/* ─── Game Bar (minimal header for game page) ───────────── */
+.game-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--wood) 0%, var(--wood-light) 60%, var(--wood) 100%);
+  border-bottom: 4px solid var(--wood-dark);
+  box-shadow: 0 4px 16px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.15);
+  position: sticky; top: 0; z-index: 100;
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      transparent, transparent 8px,
+      rgba(0,0,0,0.04) 8px, rgba(0,0,0,0.04) 9px
+    ),
+    linear-gradient(135deg, var(--wood) 0%, var(--wood-light) 60%, var(--wood) 100%);
+}
+
+.game-bar > span {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--cream);
+  text-shadow: 3px 3px 0 var(--wood-dark), 0 0 20px rgba(255,217,74,0.4);
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+/* ─── Login Hero (brand header for login page) ───────────── */
+.login-hero {
+  text-align: center;
+  padding: 28px 20px 8px;
+}
+
+.login-hero span {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  color: var(--sun);
+  text-shadow: 3px 3px 0 var(--wood-dark), 0 0 20px rgba(255,217,74,0.4);
+  letter-spacing: 3px;
+}
+
 /* ─── Game Board ─────────────────────────────────────────── */
 #board {
     display: grid;
@@ -415,21 +457,40 @@ tbody tr td:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; 
 #board button {
     width: 100px;
     height: 100px;
-    font-size: 2rem;
-    font-weight: bold;
-    background: #fff;
-    border: 3px solid #333;
-    border-radius: 10px;
+    font-size: 2.4rem !important;
+    font-weight: 900;
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border: 3px solid var(--border) !important;
+    border-radius: var(--radius-md);
     cursor: pointer;
+    box-shadow: 0 3px 0 var(--border), 0 4px 10px rgba(0,0,0,0.1) !important;
+    text-shadow: none !important;
+    background-image: none !important;
+    transition: transform 0.12s, background 0.15s;
+    line-height: 1;
 }
 
-#board button:hover {
-    background: #f0f0f0;
+#board button:hover:not(:disabled) {
+    background: var(--surface2) !important;
+    transform: translateY(-2px);
 }
 
 #board button:disabled {
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: 0.85;
+}
+
+/* X marker — bold red */
+#board button.x-mark {
+    color: var(--red-accent) !important;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.2) !important;
+}
+
+/* O marker — bold teal/blue */
+#board button.o-mark {
+    color: var(--teal) !important;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.2) !important;
 }
 
 #result {
@@ -586,9 +647,11 @@ tbody tr:nth-child(n+7) { animation-delay: 0.35s; }
   nav { padding: 10px 14px; gap: 8px; }
   nav > span { font-size: var(--text-xl); }
   nav a { padding: 5px 10px; font-size: 0.75rem; }
+  .game-bar { padding: 10px 14px; }
+  .game-bar > span { font-size: var(--text-xl); }
   main { padding: 20px 12px 50px; }
   h1  { font-size: var(--text-2xl); }
   #board { grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 72px); gap: 8px; }
-  #board button { width: 72px; height: 72px; font-size: 1.8rem; }
+  #board button { width: 72px; height: 72px; font-size: 1.8rem !important; }
   input[type="text"], select { max-width: 100%; }
 }
