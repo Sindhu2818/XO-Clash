@@ -7,9 +7,7 @@ document.documentElement.setAttribute("data-theme", theme);
 document.documentElement.setAttribute("data-font", fontSize);
 
 
-// =========================
 // LOGOUT (any page with logoutBtn)
-// =========================
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
@@ -21,9 +19,7 @@ if (logoutBtn) {
     });
 }
 
-// =========================
 // WEBCAM + LOGIN (login.html only)
-// =========================
 const video = document.getElementById("webcam");
 
 if (video) {

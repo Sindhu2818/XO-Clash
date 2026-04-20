@@ -21,7 +21,6 @@ async function loadProfile() {
     }
     const me = await meRes.json();
 
-    // If a ?uid= param is in the URL, show that player; otherwise show current user
     const params    = new URLSearchParams(window.location.search);
     const targetUid = params.get("uid") || me.uid;
 
