@@ -1,5 +1,11 @@
 const API = "http://127.0.0.1:8000";
 
+// Apply saved theme and font size
+const theme    = localStorage.getItem("theme")    || "dark";
+const fontSize = localStorage.getItem("fontSize") || "medium";
+document.documentElement.setAttribute("data-theme", theme);
+document.documentElement.setAttribute("data-font", fontSize);
+
 
 // =========================
 // LOGOUT (any page with logoutBtn)
