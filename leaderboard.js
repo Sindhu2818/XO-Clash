@@ -25,7 +25,8 @@ async function loadLeaderboard() {
         return;
     }
 
-    // Server already returns players sorted by elo descending
+    // Server already returns ALL players (from batch_data.csv) sorted by elo descending
+    // This includes players who have never logged in — they just show elo 1200 and Offline
     const data = await res.json();
     allPlayers  = data.map((player, index) => ({
         rank:      index + 1,
@@ -36,6 +37,7 @@ async function loadLeaderboard() {
     }));
 
     renderTable(allPlayers);
+    applyFilters(); // Re-apply any active filters after refresh
 }
 
 function renderTable(players) {
@@ -88,4 +90,36 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
     window.location.href = "login.html";
 });
 
+// ── Auto-refresh via WebSocket ────────────────────────────────────────────────
+// The server broadcasts a "leaderboard_update" event whenever a match ends
+// and Elo ratings are recalculated. This keeps the leaderboard live without
+// the user having to manually refresh.
+function connectLeaderboardSocket() {
+    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/leaderboard`);
+
+    ws.addEventListener("message", (event) => {
+        try {
+            const msg = JSON.parse(event.data);
+            // Server sends { type: "leaderboard_update" } after every match result
+            if (msg.type === "leaderboard_update") {
+                loadLeaderboard();
+            }
+        } catch (e) {
+            console.error("WS parse error:", e);
+        }
+    });
+
+    ws.addEventListener("close", () => {
+        // Reconnect after 3 s if the socket drops
+        setTimeout(connectLeaderboardSocket, 3000);
+    });
+
+    ws.addEventListener("error", (err) => {
+        console.error("Leaderboard WS error:", err);
+        ws.close();
+    });
+}
+
+// Initial load + open WebSocket for live Elo updates
 loadLeaderboard();
+connectLeaderboardSocket();

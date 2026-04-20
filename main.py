@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import pymysql
-from pymongo import MongoClient
+from pymongo import MongoClient,ReadPreference
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
@@ -19,7 +19,11 @@ app = FastAPI()
 
 from game import router as game_router
 app.include_router(game_router)
-
+mongo_client = MongoClient(
+    os.getenv("MONGO_URI"),
+    serverSelectionTimeoutMS=5000,
+    readPreference="secondaryPreferred"
+)
 # ----- Session config -----
 SESSION_SECRET = os.getenv("SESSION_SECRET", "secret")
 SESSION_COOKIE = "arena_session"
@@ -92,11 +96,16 @@ async def startup():
 
     def build():
         db_images = {
-            doc["uid"]: doc["image"]
-            for doc in images_collection.find({}, {"uid": 1, "image": 1})
-        }
-        print(f"Found {len(db_images)} images in MongoDB")
-        return build_encodings_cache(db_images)
+        doc["uid"]: doc["image"]
+        for doc in images_collection.with_options(
+            read_preference=ReadPreference.SECONDARY_PREFERRED
+        ).find({}, {"uid": 1, "image": 1})
+}
+        print(f"Found {len(db_images)} images in MongoDB")  # already there
+        print("Starting encoding build...")  # add this
+        result = build_encodings_cache(db_images)
+        print("Encoding build done!")  # add this
+        return result
 
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor() as pool:
