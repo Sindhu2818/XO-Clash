@@ -11,7 +11,19 @@ router = APIRouter()
 lobby_connections = {}
 game_rooms = {}
 player_room = {}
-
+leaderboard_connections = {} 
+@router.websocket("/ws/leaderboard")
+async def leaderboard_ws(websocket: WebSocket):
+    await websocket.accept()
+    conn_id = id(websocket)
+    leaderboard_connections[conn_id] = websocket
+    try:
+        while True:
+            await websocket.receive_text()  # keep alive
+    except WebSocketDisconnect:
+        pass
+    finally:
+        leaderboard_connections.pop(conn_id, None)
 # ----- MySQL helpers -----
 
 def get_mysql():
@@ -131,7 +143,9 @@ async def finish_match(room_id, winner_uid=None, outcome="win"):
     room = game_rooms.get(room_id)
     if not room:
         return
-
+    if room.get("finished"): 
+        return # ← add this
+    room["finished"] = True 
     p1, p2 = room["players"]
 
     r1 = get_elo(p1)
@@ -157,7 +171,22 @@ async def finish_match(room_id, winner_uid=None, outcome="win"):
 
     update_elo(p1, new_r1)
     update_elo(p2, new_r2)
+    set_online(p1, True)
+    set_online(p2, True)
 
+    msg = json.dumps({"type": "leaderboard_update"})
+
+    for uid, data in list(lobby_connections.items()):
+        try:
+            await data["ws"].send_text(msg)
+        except Exception:
+            pass
+
+    for conn_id, ws in list(leaderboard_connections.items()):
+        try:
+            await ws.send_text(msg)
+        except Exception:
+            pass
     player_room.pop(p1, None)
     player_room.pop(p2, None)
     game_rooms.pop(room_id, None)
@@ -181,6 +210,7 @@ async def lobby_ws(websocket: WebSocket):
             return
 
         lobby_connections[uid] = {"ws": websocket, "name": name}
+        set_online(uid, True)
         await broadcast_lobby()
 
         while True:
@@ -232,7 +262,8 @@ async def lobby_ws(websocket: WebSocket):
     finally:
         if uid:
             lobby_connections.pop(uid, None)
-            set_online(uid, False)
+            if uid not in player_room:  # ← only set offline if NOT in a game
+                set_online(uid, False)
             await broadcast_lobby()
 
 # =============================================================
@@ -336,3 +367,5 @@ async def game_ws(websocket: WebSocket, room_id: str):
                     "winner": other_uid
                 })
                 await finish_match(room_id, winner_uid=other_uid)
+            # forfeiting player goes offline, winner stays online
+            set_online(uid, False)

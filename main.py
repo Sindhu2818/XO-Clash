@@ -19,11 +19,6 @@ app = FastAPI()
 
 from game import router as game_router
 app.include_router(game_router)
-mongo_client = MongoClient(
-    os.getenv("MONGO_URI"),
-    serverSelectionTimeoutMS=5000,
-    readPreference="secondaryPreferred"
-)
 # ----- Session config -----
 SESSION_SECRET = os.getenv("SESSION_SECRET", "secret")
 SESSION_COOKIE = "arena_session"
@@ -293,7 +288,7 @@ def serve_game():
 
 @app.get("/leaderboard.html")
 def serve_leaderboard():
-    return FileResponse("Leaderboard.html")
+    return FileResponse("leaderboard.html")
 
 @app.get("/profile.html")
 def serve_profile():
