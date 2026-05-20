@@ -8,3 +8,7 @@ build/
 .next/
 .env
 coverage/
+venv/
+__pycache__/
+.env
+node_modules/
